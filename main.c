@@ -30,6 +30,7 @@ float AngleY = 0.0;
 float AngleZ = 0.0;
 
 int viewMode = 1;
+int lightMode = 0;
 
 void LoadObject(char *filename) {
     FILE *file;
@@ -174,24 +175,70 @@ void NormalizeVertexes(double _MAX, double _MIN) {
 }
 
 void ComputeNormalsToFace() {
+    int i;
+    float ux, uy, uz, vx, vy, vz;
+
+    NormalsToFaceArray = calloc(numberFaces, sizeof(Vector3D));
+    for (i = 0; i < numberFaces; i++) {
+        ux = VertexesArray[FacesArray[i].a].x - VertexesArray[FacesArray[i].b].x;
+        uy = VertexesArray[FacesArray[i].a].y - VertexesArray[FacesArray[i].b].y;
+        uz = VertexesArray[FacesArray[i].a].z - VertexesArray[FacesArray[i].b].z;
+        vx = VertexesArray[FacesArray[i].a].x - VertexesArray[FacesArray[i].b].x;
+        vy = VertexesArray[FacesArray[i].a].y - VertexesArray[FacesArray[i].b].y;
+        vz = VertexesArray[FacesArray[i].a].z - VertexesArray[FacesArray[i].b].z;
+
+        NormalsToFaceArray[i].x = uy * vz - uz * vy;
+        NormalsToFaceArray[i].y = uz * vx - ux * vz;
+        NormalsToFaceArray[i].z = ux * vy - uy * vx;
+    }
 }
 
 void ComputeNormalsToVertex() {
+    int i, j;
+    NormalsToVertexArray = calloc(numberVertices, sizeof(Vector3D));
+    for (j = 0; j < numberVertices; j++) {
+        for (i = 0; i < numberFaces; i++) {
+            if ((FacesArray[i].a == j) || (FacesArray[i].b == j || (FacesArray[i].c == j))) {
+                NormalsToVertexArray[j].x += NormalsToFaceArray[i].x;
+                NormalsToVertexArray[j].y += NormalsToFaceArray[i].y;
+                NormalsToVertexArray[j].z += NormalsToFaceArray[i].z;
+
+            }
+        }
+    }
 }
 
+GLfloat lightParam0[] = {0.0, 0.0, 0.0, 1.0};
+GLfloat lightParam1[] = {1.0, 0.0, 0.0, 1.0};
+GLfloat lightParam2[] = {1.0, 1.0, 0.0, 1.0};
+GLfloat lightParam3[] = {1.0, 1.0, 1.0, 1.0};
+
+GLfloat defaultAmbient[] = {0.0, 0.0, 0.0, 1.0};
+GLfloat defaultDiffuse[] = {1.0, 1.0, 1.0, 1.0};
+GLfloat defaultLightAmbient[] = {0.2, 0.2, 0.2, 1.0};
 
 void my_display() {
     int i;
     int a, b, c;
     float x1, y1, z1, x2, y2, z2, x3, y3, z3;
+
     float light_pos[4] = {0.0f, 0.0f, -100.0f, 0.0f};
 
-
-//    glEnable(GL_LIGHTING);
-//    glEnable(GL_LIGHT0);
-//    glEnable(GL_NORMALIZE);
-
-//    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+    switch (lightMode){
+        case 0:
+            glDisable(GL_LIGHTING);
+            break;
+        case 1:
+            glEnable(GL_LIGHTING);
+            glEnable(GL_LIGHT0);
+            glShadeModel(GL_FLAT);
+            break;
+        case 2:
+            glEnable(GL_LIGHTING);
+            glEnable(GL_LIGHT0);
+            glShadeModel(GL_SMOOTH);
+            break;
+    }
 
     glPushMatrix();
 
@@ -230,12 +277,6 @@ void my_display() {
         y3 = VertexesArray[c].y;
         z3 = VertexesArray[c].z;
 
-        if (i == 0 || i == 1) printf("a = %d, b = %d c = %d \n", a, b, c);
-        if (i == 0 || i == 1) printf("x1 = %f, y1 = %f z1 = %f \n", x1, y1, z1);
-        if (i == 0 || i == 1) printf("x2 = %f, y2 = %f z2 = %f \n", x2, y2, z2);
-        if (i == 0 || i == 1) printf("x3 = %f, y3 = %f z3 = %f \n", x3, y3, z3);
-
-
         switch (viewMode) {
             case 1:
                 glPointSize(10.0f);
@@ -263,32 +304,58 @@ void my_display() {
                 glVertex3f(x3, y3, z3);
                 glEnd();
                 break;
+            case 4:
+                glColor3ub(255, 255, 255);
+                glBegin(GL_TRIANGLES);
+                glVertex3f(x1, y1, z1);
+                glVertex3f(x2, y2, z2);
+                glVertex3f(x3, y3, z3);
+                glEnd();
+                break;
+//                /* Cieniowanie FLAT. */
+//                glEnable(GL_LIGHTING);
+//                glEnable(GL_LIGHT0);
+//
+//                glShadeModel(GL_FLAT);
+//
+//                glEnable(GL_DEPTH_TEST);
+//                /* glDepthFunc(GL_LESS); */
+//
+//                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//
+//                glMatrixMode(GL_PROJECTION);
+//                glLoadIdentity();
+//                gluPerspective(60.0, 1.0, 1.0, 250.0);
+//
+//                glMatrixMode(GL_MODELVIEW);
+//                glLoadIdentity();
+//
+//                Vector3D n;
+//                n = NormalsToFaceArray[i];
+//                glBegin(GL_TRIANGLES);
+//                glNormal3f(n.x, n.y, n.z);
+//                glVertex3f(x1, y1, z1);
+//                glVertex3f(x2, y2, z2);
+//                glVertex3f(x3, y3, z3);
+//                glEnd();
+//                break;
+//            case 5:
+//                /* Cieniowanie Gourauda. */
+//                glShadeModel(GL_SMOOTH);
+//                Vector3D n1, n2, n3;
+//                n1 = NormalsToVertexArray[a];
+//                n2 = NormalsToVertexArray[b];
+//                n3 = NormalsToVertexArray[c];
+//                glBegin(GL_TRIANGLES);
+//                glNormal3f(n1.x, n1.y, n1.z);
+//                glVertex3f(x1, y1, z1);
+//                glNormal3f(n2.x, n2.y, n2.z);
+//                glVertex3f(x2, y2, z2);
+//                glNormal3f(n3.x, n3.y, n3.z);
+//                glVertex3f(x3, y3, z3);
+//                glEnd();
+//                break;
         }
-        /* Cieniowanie FLAT. */
-//        glShadeModel(GL_FLAT);
-//        Vector3D n;
-//        n = NormalsToFace[i];
-//        glBegin(GL_TRIANGLES);
-//            glNormal3f(n.x, n.y, n.z);
-//            glVertex3f(x1, y1, z1);
-//            glVertex3f(x2, y2, z2);
-//            glVertex3f(x3, y3, z3);
-//        glEnd();
-
-        /* Cieniowanie Gourauda. */
-//        glShadeModel(GL_SMOOTH);
-//        Vector3D n1, n2, n3;
-//        n1 = NormalsToVertexArray[a];
-//        n2 = NormalsToVertexArray[b];
-//        n3 = NormalsToVertexArray[c];
-//        glBegin(GL_TRIANGLES);
-//        glNormal3f(n1.x, n1.y, n1.z);
-//        glVertex3f(x1, y1, z1);
-//        glNormal3f(n2.x, n2.y, n2.z);
-//        glVertex3f(x2, y2, z2);
-//        glNormal3f(n3.x, n3.y, n3.z);
-//        glVertex3f(x3, y3, z3);
-//        glEnd();
     }
 
     glPopMatrix();
@@ -304,12 +371,23 @@ void keyboard(unsigned char key, int x, int y) {
     switch (key) {
         case 49:
             viewMode = 1;
+            lightMode = 0;
             break;
         case 50:
             viewMode = 2;
+            lightMode = 0;
             break;
         case 51:
             viewMode = 3;
+            lightMode = 0;
+            break;
+        case 52:
+            viewMode = 4;
+            lightMode = 1;
+            break;
+        case 53:
+            viewMode = 4;
+            lightMode = 2;
             break;
         case 32:
             break;
