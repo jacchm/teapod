@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+D:/STUDIA_INFORMATYCZNE/ROK_II/SEM_IV/03_GK/06-Grafika_3D_cd/reader_obj/main.c
+stdio.h
+-
+stdlib.h
+-
+string.h
+-
+gl.h
+-
+glu.h
+-
+glut.h
+-
+

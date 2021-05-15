@@ -1,0 +1,3 @@
+D:/STUDIA_INFORMATYCZNE/ROK_II/SEM_IV/03_GK/06-Grafika_3D_cd/reader_obj/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/STUDIA_INFORMATYCZNE/ROK_II/SEM_IV/03_GK/06-Grafika_3D_cd/reader_obj/cmake-build-debug/CMakeFiles/reader_obj.dir
+D:/STUDIA_INFORMATYCZNE/ROK_II/SEM_IV/03_GK/06-Grafika_3D_cd/reader_obj/cmake-build-debug/CMakeFiles/rebuild_cache.dir
