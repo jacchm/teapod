@@ -1,5 +1,3 @@
-#pragma pack(1)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,30 +15,28 @@ typedef struct _Face {
 } Face;
 
 int numberVertices;
-Vector3D *VertexesArray;
+Vector3D *verticesArray;
 
 int numberFaces;
-Face *FacesArray;
+Face *facesArray;
 
-Vector3D *NormalsToFaceArray;
-Vector3D *NormalsToVertexArray;
+Vector3D *normalsToFaceArray;
+Vector3D *normalsToVertexArray;
 
-float AngleX = 0.0;
-float AngleY = 0.0;
-float AngleZ = 0.0;
+float angleX = 0.0;
+float angleY = 0.0;
+float angleZ = 0.0;
 
-int viewMode = 1;
-int lightMode = 0;
+int visualizationType = 0;
 
-void LoadObject(char *filename) {
+void loadObject(char *filename) {
     FILE *file;
     char line[255], *str;
-    int iVertex = 0, iFace = 0;
+    int vertexCounter = 0, faceCounter = 0;
 
     file = fopen(filename, "r");
     numberVertices = 0;
     numberFaces = 0;
-
     while (!feof(file)) {
         fgets(line, 255, file);
         if (strncmp(line, "v ", 2) == 0)
@@ -51,35 +47,31 @@ void LoadObject(char *filename) {
 
     fseek(file, 0, SEEK_SET);
     if ((numberVertices > 0) && (numberFaces > 0)) {
-        VertexesArray = calloc(numberVertices, sizeof(Vector3D));
-        FacesArray = calloc(numberFaces, sizeof(Face));
+        verticesArray = calloc(numberVertices, sizeof(Vector3D));
+        facesArray = calloc(numberFaces, sizeof(Face));
         while (!feof(file)) {
             fgets(line, 255, file);
             if (strncmp(line, "v ", 2) == 0) {
                 str = strtok(line, " ");
-                VertexesArray[iVertex].x = atof(strtok(NULL, " "));
-                VertexesArray[iVertex].y = atof(strtok(NULL, " "));
-                VertexesArray[iVertex].z = atof(strtok(NULL, " "));
-                printf("%6.3f %6.3f %6.3f\n", VertexesArray[iVertex].x, VertexesArray[iVertex].y,
-                       VertexesArray[iVertex].z);
-                iVertex++;
+                verticesArray[vertexCounter].x = atof(strtok(NULL, " "));
+                verticesArray[vertexCounter].y = atof(strtok(NULL, " "));
+                verticesArray[vertexCounter].z = atof(strtok(NULL, " "));
+                vertexCounter++;
             }
             if (line[0] == 'f') {
                 str = strtok(line, " ");
-                FacesArray[iFace].a = atoi(strtok(NULL, " ")) - 1;
-                FacesArray[iFace].b = atoi(strtok(NULL, " ")) - 1;
-                FacesArray[iFace].c = atoi(strtok(NULL, " ")) - 1;
-                /*printf("%d %d %d\n", FacesArray[iFace].a, FacesArray[iFace].b, FacesArray[iFace].c);*/
-                iFace++;
+                facesArray[faceCounter].a = atoi(strtok(NULL, " ")) - 1;
+                facesArray[faceCounter].b = atoi(strtok(NULL, " ")) - 1;
+                facesArray[faceCounter].c = atoi(strtok(NULL, " ")) - 1;
+                faceCounter++;
             }
             strcpy(line, "");
         }
     }
-
     fclose(file);
 }
 
-void NormalizeVertexes(double _MAX, double _MIN) {
+void normalizeVertices(double _MAX, double _MIN) {
     int i, j;
     float x, y, z;
     float xm, ym, zm;
@@ -88,17 +80,17 @@ void NormalizeVertexes(double _MAX, double _MIN) {
     float _xmax, _ymax, _zmax;
     float _xmin, _ymin, _zmin;
 
-    xmax = -1000000000.0f;
-    xmin = 1000000000.0f;
-    ymax = -1000000000.0f;
-    ymin = 1000000000.0f;
-    zmax = -1000000000.0f;
-    zmin = 1000000000.0f;
+    xmax = -1000000000.0;
+    xmin = 1000000000.0;
+    ymax = -1000000000.0;
+    ymin = 1000000000.0;
+    zmax = -1000000000.0;
+    zmin = 1000000000.0;
 
     for (i = 0; i < numberVertices; i++) {
-        x = VertexesArray[i].x;
-        y = VertexesArray[i].y;
-        z = VertexesArray[i].z;
+        x = verticesArray[i].x;
+        y = verticesArray[i].y;
+        z = verticesArray[i].z;
 
         if (x > xmax) xmax = x;
         if (y > ymax) ymax = y;
@@ -109,30 +101,30 @@ void NormalizeVertexes(double _MAX, double _MIN) {
     }
 
     if (xmax == xmin) {
-        xmax += 0.001f;
-        xmin -= 0.001f;
+        xmax += 0.001;
+        xmin -= 0.001;
     }
     if (ymax == ymin) {
-        ymax += 0.001f;
-        ymin -= 0.001f;
+        ymax += 0.001;
+        ymin -= 0.001;
     }
     if (zmax == zmin) {
-        zmax += 0.001f;
-        zmin -= 0.001f;
+        zmax += 0.001;
+        zmin -= 0.001;
     }
 
     xm = xmax - xmin;
     ym = ymax - ymin;
     zm = zmax - zmin;
 
-    xm /= 2.0f;
-    ym /= 2.0f;
-    zm /= 2.0f;
+    xm /= 2.0;
+    ym /= 2.0;
+    zm /= 2.0;
 
     for (i = 0; i < numberVertices; i++) {
-        VertexesArray[i].x = (VertexesArray[i].x - xmax) + xm;
-        VertexesArray[i].y = (VertexesArray[i].y - ymax) + ym;
-        VertexesArray[i].z = (VertexesArray[i].z - zmax) + zm;
+        verticesArray[i].x = (verticesArray[i].x - xmax) + xm;
+        verticesArray[i].y = (verticesArray[i].y - ymax) + ym;
+        verticesArray[i].z = (verticesArray[i].z - zmax) + zm;
     }
 
     xmin = -xm;
@@ -168,79 +160,54 @@ void NormalizeVertexes(double _MAX, double _MIN) {
     }
 
     for (i = 0; i < numberVertices; i++) {
-        VertexesArray[i].x = ((VertexesArray[i].x - xmin) / (xmax - xmin)) * (_xmax - _xmin) + _xmin;
-        VertexesArray[i].y = ((VertexesArray[i].y - ymin) / (ymax - ymin)) * (_ymax - _ymin) + _ymin;
-        VertexesArray[i].z = ((VertexesArray[i].z - zmin) / (zmax - zmin)) * (_zmax - _zmin) + _zmin;
+        verticesArray[i].x = ((verticesArray[i].x - xmin) / (xmax - xmin)) * (_xmax - _xmin) + _xmin;
+        verticesArray[i].y = ((verticesArray[i].y - ymin) / (ymax - ymin)) * (_ymax - _ymin) + _ymin;
+        verticesArray[i].z = ((verticesArray[i].z - zmin) / (zmax - zmin)) * (_zmax - _zmin) + _zmin;
     }
 }
 
-void ComputeNormalsToFace() {
+void computeNormalsToFace() {
     int i;
     float ux, uy, uz, vx, vy, vz;
 
-    NormalsToFaceArray = calloc(numberFaces, sizeof(Vector3D));
+    normalsToFaceArray = calloc(numberFaces, sizeof(Vector3D));
     for (i = 0; i < numberFaces; i++) {
-        ux = VertexesArray[FacesArray[i].a].x - VertexesArray[FacesArray[i].b].x;
-        uy = VertexesArray[FacesArray[i].a].y - VertexesArray[FacesArray[i].b].y;
-        uz = VertexesArray[FacesArray[i].a].z - VertexesArray[FacesArray[i].b].z;
-        vx = VertexesArray[FacesArray[i].a].x - VertexesArray[FacesArray[i].b].x;
-        vy = VertexesArray[FacesArray[i].a].y - VertexesArray[FacesArray[i].b].y;
-        vz = VertexesArray[FacesArray[i].a].z - VertexesArray[FacesArray[i].b].z;
+        ux = verticesArray[facesArray[i].a].x - verticesArray[facesArray[i].b].x;
+        uy = verticesArray[facesArray[i].a].y - verticesArray[facesArray[i].b].y;
+        uz = verticesArray[facesArray[i].a].z - verticesArray[facesArray[i].b].z;
+        vx = verticesArray[facesArray[i].b].x - verticesArray[facesArray[i].c].x;
+        vy = verticesArray[facesArray[i].b].y - verticesArray[facesArray[i].c].y;
+        vz = verticesArray[facesArray[i].b].z - verticesArray[facesArray[i].c].z;
 
-        NormalsToFaceArray[i].x = uy * vz - uz * vy;
-        NormalsToFaceArray[i].y = uz * vx - ux * vz;
-        NormalsToFaceArray[i].z = ux * vy - uy * vx;
+        normalsToFaceArray[i].x = uy * vz - uz * vy;
+        normalsToFaceArray[i].y = uz * vx - ux * vz;
+        normalsToFaceArray[i].z = ux * vy - uy * vx;
     }
 }
 
-void ComputeNormalsToVertex() {
+void computeNormalsToVertex() {
     int i, j;
-    NormalsToVertexArray = calloc(numberVertices, sizeof(Vector3D));
+    normalsToVertexArray = calloc(numberVertices, sizeof(Vector3D));
     for (j = 0; j < numberVertices; j++) {
         for (i = 0; i < numberFaces; i++) {
-            if ((FacesArray[i].a == j) || (FacesArray[i].b == j || (FacesArray[i].c == j))) {
-                NormalsToVertexArray[j].x += NormalsToFaceArray[i].x;
-                NormalsToVertexArray[j].y += NormalsToFaceArray[i].y;
-                NormalsToVertexArray[j].z += NormalsToFaceArray[i].z;
-
+            if ((facesArray[i].a == j) || (facesArray[i].b == j || (facesArray[i].c == j))) {
+                normalsToVertexArray[j].x += normalsToFaceArray[i].x;
+                normalsToVertexArray[j].y += normalsToFaceArray[i].y;
+                normalsToVertexArray[j].z += normalsToFaceArray[i].z;
             }
         }
     }
 }
-
-GLfloat lightParam0[] = {0.0, 0.0, 0.0, 1.0};
-GLfloat lightParam1[] = {1.0, 0.0, 0.0, 1.0};
-GLfloat lightParam2[] = {1.0, 1.0, 0.0, 1.0};
-GLfloat lightParam3[] = {1.0, 1.0, 1.0, 1.0};
-
-GLfloat defaultAmbient[] = {0.0, 0.0, 0.0, 1.0};
-GLfloat defaultDiffuse[] = {1.0, 1.0, 1.0, 1.0};
-GLfloat defaultLightAmbient[] = {0.2, 0.2, 0.2, 1.0};
 
 void my_display() {
     int i;
     int a, b, c;
     float x1, y1, z1, x2, y2, z2, x3, y3, z3;
 
-    float light_pos[4] = {0.0f, 0.0f, -100.0f, 0.0f};
+    Vector3D n;
+    Vector3D n1, n2, n3;
 
-    switch (lightMode){
-        case 0:
-            glDisable(GL_LIGHTING);
-            break;
-        case 1:
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
-            glShadeModel(GL_FLAT);
-            break;
-        case 2:
-            glEnable(GL_LIGHTING);
-            glEnable(GL_LIGHT0);
-            glShadeModel(GL_SMOOTH);
-            break;
-    }
-
-    glPushMatrix();
+    float light_pos[4] = {0.0, 0.0, -100.0, 0.0};
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -253,169 +220,146 @@ void my_display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos);
+
     glTranslatef(0.0, 0.0, -20.0);
-    glRotatef(AngleX, 1.0, 0.0, 0.0);
-    glRotatef(AngleY, 0.0, 1.0, 0.0);
-    glRotatef(AngleZ, 0.0, 0.0, 1.0);
+    glRotatef(angleX, 1.0, 0.0, 0.0);
+    glRotatef(angleY, 0.0, 1.0, 0.0);
+    glRotatef(angleZ, 0.0, 0.0, 1.0);
 
     srand(0);
     for (i = 0; i < numberFaces; i++) {
+        a = facesArray[i].a;
+        b = facesArray[i].b;
+        c = facesArray[i].c;
 
-        a = FacesArray[i].a;
-        b = FacesArray[i].b;
-        c = FacesArray[i].c;
+        x1 = verticesArray[a].x;
+        y1 = verticesArray[a].y;
+        z1 = verticesArray[a].z;
 
-        x1 = VertexesArray[a].x;
-        y1 = VertexesArray[a].y;
-        z1 = VertexesArray[a].z;
+        x2 = verticesArray[b].x;
+        y2 = verticesArray[b].y;
+        z2 = verticesArray[b].z;
 
-        x2 = VertexesArray[b].x;
-        y2 = VertexesArray[b].y;
-        z2 = VertexesArray[b].z;
+        x3 = verticesArray[c].x;
+        y3 = verticesArray[c].y;
+        z3 = verticesArray[c].z;
 
-        x3 = VertexesArray[c].x;
-        y3 = VertexesArray[c].y;
-        z3 = VertexesArray[c].z;
+        // Points.
+        if (visualizationType == 0) {
+            glDisable(GL_LIGHTING);
+            glColor3ub(255, 255, 0);
+            glPointSize(4.0);
+            glBegin(GL_POINTS);
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x2, y2, z2);
+            glVertex3f(x3, y3, z3);
+            glEnd();
+        }
 
-        switch (viewMode) {
-            case 1:
-                glPointSize(10.0f);
-                glBegin(GL_POINTS);
-                glColor3ub(255, 255, 255);
-                glVertex3f(x1, y1, z1);
-                glVertex3f(x2, y2, z2);
-                glVertex3f(x3, y3, z3);
-                glEnd();
-                break;
-            case 2:
-                glColor3ub(255, 255, 255);
-                glLineWidth(3.0);
-                glBegin(GL_LINE_STRIP);
-                glVertex3f(x1, y1, z1);
-                glVertex3f(x2, y2, z2);
-                glVertex3f(x3, y3, z3);
-                glEnd();
-                break;
-            case 3:
-                glColor3ub(rand() % 255, rand() % 255, rand() % 255);
-                glBegin(GL_TRIANGLES);
-                glVertex3f(x1, y1, z1);
-                glVertex3f(x2, y2, z2);
-                glVertex3f(x3, y3, z3);
-                glEnd();
-                break;
-            case 4:
-                glColor3ub(255, 255, 255);
-                glBegin(GL_TRIANGLES);
-                glVertex3f(x1, y1, z1);
-                glVertex3f(x2, y2, z2);
-                glVertex3f(x3, y3, z3);
-                glEnd();
-                break;
-//                /* Cieniowanie FLAT. */
-//                glEnable(GL_LIGHTING);
-//                glEnable(GL_LIGHT0);
-//
-//                glShadeModel(GL_FLAT);
-//
-//                glEnable(GL_DEPTH_TEST);
-//                /* glDepthFunc(GL_LESS); */
-//
-//                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//
-//                glMatrixMode(GL_PROJECTION);
-//                glLoadIdentity();
-//                gluPerspective(60.0, 1.0, 1.0, 250.0);
-//
-//                glMatrixMode(GL_MODELVIEW);
-//                glLoadIdentity();
-//
-//                Vector3D n;
-//                n = NormalsToFaceArray[i];
-//                glBegin(GL_TRIANGLES);
-//                glNormal3f(n.x, n.y, n.z);
-//                glVertex3f(x1, y1, z1);
-//                glVertex3f(x2, y2, z2);
-//                glVertex3f(x3, y3, z3);
-//                glEnd();
-//                break;
-//            case 5:
-//                /* Cieniowanie Gourauda. */
-//                glShadeModel(GL_SMOOTH);
-//                Vector3D n1, n2, n3;
-//                n1 = NormalsToVertexArray[a];
-//                n2 = NormalsToVertexArray[b];
-//                n3 = NormalsToVertexArray[c];
-//                glBegin(GL_TRIANGLES);
-//                glNormal3f(n1.x, n1.y, n1.z);
-//                glVertex3f(x1, y1, z1);
-//                glNormal3f(n2.x, n2.y, n2.z);
-//                glVertex3f(x2, y2, z2);
-//                glNormal3f(n3.x, n3.y, n3.z);
-//                glVertex3f(x3, y3, z3);
-//                glEnd();
-//                break;
+        // Wireframe.
+        if (visualizationType == 1) {
+            glDisable(GL_LIGHTING);
+            glColor3ub(255, 255, 0);
+            glLineWidth(1.0);
+            glBegin(GL_LINE_STRIP);
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x2, y2, z2);
+            glVertex3f(x3, y3, z3);
+            glEnd();
+
+        }
+
+        // Triangles.
+        if (visualizationType == 2) {
+            glDisable(GL_LIGHTING);
+            glColor3ub(rand() % 255, rand() % 255, rand() % 255);
+            glBegin(GL_TRIANGLES);
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x2, y2, z2);
+            glVertex3f(x3, y3, z3);
+            glEnd();
+        }
+
+        /* Flat shading. */
+        if (visualizationType == 3) {
+            glEnable(GL_LIGHTING);
+            glEnable(GL_LIGHT0);
+            glEnable(GL_NORMALIZE);
+            glShadeModel(GL_FLAT);
+            n = normalsToFaceArray[i];
+            glBegin(GL_TRIANGLES);
+            glNormal3f(n.x, n.y, n.z);
+            glVertex3f(x1, y1, z1);
+            glVertex3f(x2, y2, z2);
+            glVertex3f(x3, y3, z3);
+            glEnd();
+        }
+
+        /* Gouraud shading. */
+        if (visualizationType == 4) {
+            glEnable(GL_LIGHTING);
+            glEnable(GL_LIGHT0);
+            glEnable(GL_NORMALIZE);
+            glShadeModel(GL_SMOOTH);
+            n1 = normalsToVertexArray[a];
+            n2 = normalsToVertexArray[b];
+            n3 = normalsToVertexArray[c];
+            glBegin(GL_TRIANGLES);
+            glNormal3f(n1.x, n1.y, n1.z);
+            glVertex3f(x1, y1, z1);
+            glNormal3f(n2.x, n2.y, n2.z);
+            glVertex3f(x2, y2, z2);
+            glNormal3f(n3.x, n3.y, n3.z);
+            glVertex3f(x3, y3, z3);
+            glEnd();
         }
     }
 
-    glPopMatrix();
-
-    AngleX += 0.05;
-    AngleY += 0.05;
-    AngleZ += 0.05;
+    angleX += 0.05;
+    angleY += 0.05;
+    angleZ += 0.05;
 
     glutSwapBuffers();
 }
 
-void keyboard(unsigned char key, int x, int y) {
+void my_keyboard(unsigned char key, int x, int y) {
     switch (key) {
         case 49:
-            viewMode = 1;
-            lightMode = 0;
+            visualizationType = 0;
             break;
         case 50:
-            viewMode = 2;
-            lightMode = 0;
+            visualizationType = 1;
             break;
         case 51:
-            viewMode = 3;
-            lightMode = 0;
+            visualizationType = 2;
             break;
         case 52:
-            viewMode = 4;
-            lightMode = 1;
+            visualizationType = 3;
             break;
         case 53:
-            viewMode = 4;
-            lightMode = 2;
-            break;
-        case 32:
+            visualizationType = 4;
             break;
         case 27:
             exit(0);
-        default:
-            break;
     }
 }
 
 int main(int argc, char *argv[]) {
+    loadObject("D:\\STUDIA_INFORMATYCZNE\\ROK_II\\SEM_IV\\03_GK\\reader_obj_2\\teapot.obj");
+    normalizeVertices(10.0, -10.0);
 
-    LoadObject("D:\\STUDIA_INFORMATYCZNE\\ROK_II\\SEM_IV\\04_CPP\\SYF2\\teapot.obj");
-    NormalizeVertexes(10.0, -10.0);
-    printf("AfterNormalization\n");
-    ComputeNormalsToFace();
-    printf("After compute normal to face\n");
-    ComputeNormalsToVertex();
-    printf("After compute normal to vertex\n");
+    computeNormalsToFace();
+    computeNormalsToVertex();
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(700, 700);
+    glutInitWindowSize(500, 500);
     glutInitWindowPosition(0, 0);
-    glutCreateWindow("OpenGL + GLUT");
+    glutCreateWindow("OpenGL");
+
     glutDisplayFunc(my_display);
     glutIdleFunc(my_display);
-    glutKeyboardFunc(keyboard);
+    glutKeyboardFunc(my_keyboard);
     glutMainLoop();
 }
-
